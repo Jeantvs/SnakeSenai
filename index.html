@@ -74,7 +74,7 @@ li.vazio{opacity:.45}
    "https://meu-projeto-default-rtdb.firebaseio.com"
    Deixe vazio ("") para usar só o ranking local do navegador.
    ===================================================================== */
-const FIREBASE_URL = "";
+const FIREBASE_URL = "https://snake-mundosenai-default-rtdb.firebaseio.com";
 
 const API = FIREBASE_URL ? FIREBASE_URL.replace(/\/+$/, '') + '/ranking' : null;
 const cv=document.getElementById('c'),ctx=cv.getContext('2d'),N=20;
@@ -234,6 +234,81 @@ function applyHeld(t){
     const u=isHeld('u'),d=isHeld('d'),l=isHeld('l'),r=isHeld('r');
     if(u&&dir.y===0)turn(D.u);else if(d&&dir.y===0)turn(D.d);
     else if(l&&dir.x===0)turn(D.l);else if(r&&dir.x===0)turn(D.r);
+  }else if(state==='name'){
+    // segurar cima/baixo repete a letra
+    ['u','d'].forEach(k=>{
+      if(isHeld(k)&&holdT[k]>=nameStart&&t-holdT[k]>450&&t-repT>90){repT=t;onPress(k);holdT[k]=t-451}
+    });
+  }
+}
+
+/* ---------- desenho ---------- */
+function rr(x,y,w,h,r){ctx.beginPath();ctx.roundRect?ctx.roundRect(x,y,w,h,r):ctx.rect(x,y,w,h)}
+function drawBoard(t){
+  const c=S/N;
+  const g=ctx.createLinearGradient(0,0,S,S);g.addColorStop(0,'#08285a');g.addColorStop(1,'#041733');
+  ctx.fillStyle=g;ctx.fillRect(0,0,S,S);
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++)if((x+y)%2===0){ctx.fillStyle='rgba(255,255,255,.035)';ctx.fillRect(x*c,y*c,c,c)}
+  const pulse=1+Math.sin(t/220)*0.06,fx=(food.x+.5)*c,fy=(food.y+.5)*c,fr=c*.38*pulse;
+  ctx.shadowColor='rgba(227,6,19,.8)';ctx.shadowBlur=c*.6;
+  ctx.fillStyle='#e30613';ctx.beginPath();ctx.arc(fx,fy,fr,0,7);ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.fillStyle='rgba(255,255,255,.55)';ctx.beginPath();ctx.arc(fx-fr*.35,fy-fr*.35,fr*.22,0,7);ctx.fill();
+  ctx.fillStyle='#3ddc84';ctx.beginPath();ctx.ellipse(fx+fr*.3,fy-fr*.95,fr*.4,fr*.2,-.6,0,7);ctx.fill();
+  const n=snake.length;
+  for(let i=n-1;i>=0;i--){
+    const s=snake[i],k=1-i/Math.max(n,6);
+    ctx.fillStyle=i===0?'#ffffff':`rgb(${Math.round(40+60*k)},${Math.round(120+80*k)},255)`;
+    if(i===0){ctx.shadowColor='rgba(120,190,255,.9)';ctx.shadowBlur=c*.5}
+    rr(s.x*c+c*.07,s.y*c+c*.07,c*.86,c*.86,c*.28);ctx.fill();
+    ctx.shadowBlur=0;
+  }
+  const hd=snake[0],ex=dir.y!==0?[-.2,.2]:[0,0],ey=dir.x!==0?[-.2,.2]:[0,0];
+  ctx.fillStyle='#0a2a5e';
+  for(let i=0;i<2;i++){ctx.beginPath();ctx.arc((hd.x+.5+dir.x*.18+ex[i])*c,(hd.y+.5+dir.y*.18+ey[i])*c,c*.09,0,7);ctx.fill()}
+}
+function txt(t,y,px,col,wt){ctx.fillStyle=col||'#fff';ctx.textAlign='center';ctx.font=(wt||800)+' '+px+'px "Barlow Condensed",Impact,sans-serif';ctx.fillText(t,S/2,y)}
+function barra(y){ctx.fillStyle='#e30613';ctx.fillRect(S/2-S*.09,y,S*.18,S*.012)}
+const FRASE_CAMPEAO='NOVO CAMPEÃO DO MUNDO SENAI!';
+// escreve um texto centralizado, quebrando em várias linhas para caber na largura máxima
+function wrapTxt(texto,y,maxW,px,col,lh){
+  ctx.save();
+  ctx.font='800 '+px+'px "Barlow Condensed",Impact,sans-serif';
+  const palavras=texto.split(' '),linhas=[];let atual='';
+  for(const w of palavras){
+    const t=atual?atual+' '+w:w;
+    if(ctx.measureText(t).width>maxW&&atual){linhas.push(atual);atual=w}else atual=t;
+  }
+  if(atual)linhas.push(atual);
+  ctx.restore();
+  linhas.forEach((l,i)=>txt(l,y+i*lh,px,col));
+}
+function drawOverlay(){
+  if(state==='play')return;
+  ctx.fillStyle='rgba(4,17,40,.84)';ctx.fillRect(0,0,S,S);
+  if(state==='menu'){
+    txt('SNAKE',S*.3,S*.17);barra(S*.33);
+    txt('MUNDO SENAI',S*.4,S*.06,'#7ab6ff',700);
+    txt('Aperte A para jogar',S*.58,S*.065);
+    txt(connected?'Controle conectado ✓':'Aperte um botão do controle para conectar',S*.66,S*.04,connected?'#3ddc84':'#93a6c9',600);
+    txt('Recorde: '+bestScore(),S*.78,S*.05,'#f5b800',700);
+  }else if(state==='pause'){
+    txt('PAUSADO',S*.48,S*.12);txt('Aperte B para continuar',S*.58,S*.05,'#93a6c9',600);
+  }else if(state==='over'){
+    if(lastRank===1){
+      txt('FIM DE JOGO',S*.16,S*.08);barra(S*.19);
+      txt('Pontos: '+score,S*.31,S*.075,'#fff');
+      // frase de campeão, em dourado pulsante e quebrada em linhas que cabem na tela
+      const pulse=(Math.sin(performance.now()/260)+1)/2;
+      const cor=`rgb(255,${Math.round(184+60*pulse)},${Math.round(0+90*pulse)})`;
+      wrapTxt(FRASE_CAMPEAO,S*.5,S*.88,S*.07,cor,S*.085);
+      txt('Aperte A para jogar de novo',S*.88,S*.045,'#7ab6ff',700);
+    }else{
+      txt('FIM DE JOGO',S*.3,S*.12);barra(S*.34);
+      txt('Pontos: '+score,S*.5,S*.09,'#fff');
+      if(lastRank)txt('Você ficou em '+lastRank+'º no ranking',S*.6,S*.05,'#f5b800',700);
+      txt('Aperte A para jogar de novo',S*.76,S*.05,'#7ab6ff',700);
+    }
   }else if(state==='name'){
     // fundo opaco: o texto não se mistura com o tabuleiro atrás
     ctx.fillStyle='#061a3a';ctx.fillRect(0,0,S,S);
