@@ -74,7 +74,7 @@ li.vazio{opacity:.45}
    "https://meu-projeto-default-rtdb.firebaseio.com"
    Deixe vazio ("") para usar só o ranking local do navegador.
    ===================================================================== */
-const FIREBASE_URL = "https://snake-mundosenai-default-rtdb.firebaseio.com";
+const FIREBASE_URL = "https://snake-mundosenai-default-rtdb.firebaseio.com/";
 
 const API = FIREBASE_URL ? FIREBASE_URL.replace(/\/+$/, '') + '/ranking' : null;
 const cv=document.getElementById('c'),ctx=cv.getContext('2d'),N=20;
