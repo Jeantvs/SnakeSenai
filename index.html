@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Snake · Mundo SENAI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef3fb;--card:#ffffff;--fg:#0a1f3f;--mut:#5a6b88;--line:#d3deef;--accent:#0b4ea2;--red:#e30613;--gold:#f5b800;--row:#f3f7fd;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#050f22;--card:#0a1b38;--fg:#eaf1ff;--mut:#93a6c9;--line:#17305c;--accent:#4a9bff;--row:#0e2347}}
+:root[data-theme="dark"]{--bg:#050f22;--card:#0a1b38;--fg:#eaf1ff;--mut:#93a6c9;--line:#17305c;--accent:#4a9bff;--row:#0e2347}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--fg);font-family:Barlow,system-ui,-apple-system,Segoe UI,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 22px;background:linear-gradient(90deg,#0a3a7a,#0b4ea2);color:#fff;border-bottom:4px solid var(--red)}
+.brand{display:flex;align-items:center;gap:12px;font-family:"Barlow Condensed",Impact,sans-serif;font-weight:800;font-size:1.6rem;letter-spacing:.06em;text-transform:uppercase}
+.brand i{display:inline-block;width:8px;height:28px;background:var(--red);border-radius:2px}
+.ttl{font-family:"Barlow Condensed",Impact,sans-serif;font-weight:700;font-size:1.3rem;letter-spacing:.3em;opacity:.9}
+.stage{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;padding:16px 22px}
+@media(max-width:860px){.stage{grid-template-columns:1fr;overflow:auto}body{overflow:auto}}
+.game{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;min-height:0}
+.hud{display:flex;gap:12px;margin-bottom:10px}
+.hud div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 18px;text-align:center;min-width:110px}
+.hud small{display:block;color:var(--mut);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600}
+.hud b{font-family:"Barlow Condensed",Impact,sans-serif;font-size:1.7rem;font-weight:800;line-height:1.1}
+canvas{display:block;border-radius:16px;box-shadow:0 10px 40px rgba(11,78,162,.35),0 0 0 4px var(--accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;min-height:0;display:flex;flex-direction:column;overflow:auto}
+.card h2{font-family:"Barlow Condensed",Impact,sans-serif;font-size:1.5rem;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.card h2::before{content:"";width:6px;height:22px;background:var(--red);border-radius:2px}
+ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+li{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:8px;background:var(--row);border-radius:10px;padding:7px 12px;font-weight:600}
+li .p{font-family:"Barlow Condensed",Impact,sans-serif;font-size:1.2rem;color:var(--mut)}
+li .n{font-family:"Barlow Condensed",Impact,sans-serif;font-size:1.3rem;letter-spacing:.1em;overflow:hidden;white-space:pre}
+li .s{font-family:"Barlow Condensed",Impact,sans-serif;font-size:1.3rem;font-weight:800;color:var(--accent)}
+li.top1 .p{color:var(--gold)}li.top2 .p{color:#9aa7ba}li.top3 .p{color:#c4772f}
+li.me{outline:2px solid var(--red)}
+li.vazio{opacity:.45}
+.help{margin-top:12px;color:var(--mut);font-size:.85rem;line-height:1.5;border-top:1px solid var(--line);padding-top:10px}
+.help b{color:var(--fg)}
+.foot{margin-top:10px;font-size:.78rem;color:var(--mut)}
+.foot.ok{color:#1f9d55}.foot.err{color:var(--red)}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><i></i>Mundo SENAI</div>
+  <div class="ttl">SNAKE</div>
+</header>
+<main class="stage">
+  <section class="game" id="game">
+    <div class="hud">
+      <div><small>Pontos</small><b id="score">0</b></div>
+      <div><small>Nível</small><b id="lvl">1</b></div>
+      <div><small>Recorde</small><b id="best">0</b></div>
+    </div>
+    <canvas id="c"></canvas>
+  </section>
+  <aside class="card">
+    <h2>Ranking</h2>
+    <ol id="list"></ol>
+    <div class="help"><b>Controle:</b> direcional move a cobra, <b>A</b> começa e confirma, <b>B</b> pausa.<br><b>Teclado:</b> setas ou WASD, Espaço/Enter, P para pausar.</div>
+    <div class="foot" id="src"></div>
+  </aside>
+</main>
+
+<script>
+/* =====================================================================
+   CONFIGURAÇÃO DO BANCO DE DADOS (Firebase Realtime Database)
+   Cole aqui a URL do seu banco, por exemplo:
+   "https://meu-projeto-default-rtdb.firebaseio.com"
+   Deixe vazio ("") para usar só o ranking local do navegador.
+   ===================================================================== */
+const FIREBASE_URL = "";
+
+const API = FIREBASE_URL ? FIREBASE_URL.replace(/\/+$/, '') + '/ranking' : null;
+const cv=document.getElementById('c'),ctx=cv.getContext('2d'),N=20;
+const $=id=>document.getElementById(id);
+const D={u:{x:0,y:-1},d:{x:0,y:1},l:{x:-1,y:0},r:{x:1,y:0}};
+const H=['u','ur','r','dr','d','dl','l','ul'];
+const KEY='snake-senai-ranking';
+const CH='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ',BLANK=CH.length-1,MAXNAME=8;
+let S=400,dpr=1;
+let snake,dir,next,food,score=0,state='menu',last=0,speed=140,level=1;
+let idx=Array(MAXNAME).fill(BLANK),pos=0,lastSaved=null,lastRank=0,connected=false,nameStart=0;
+let localRank=[],dbRows=null,online=false;
+
+/* ---------- ranking ---------- */
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function loadLocal(){try{localRank=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){localRank=[]}}
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(localRank))}catch(e){}}
+function sortR(a){return a.slice().sort((x,y)=>y.score-x.score||x.ts-y.ts)}
+function ranking(){return sortR(dbRows||localRank).slice(0,10)}
+function bestScore(){const r=ranking();return r.length?r[0].score:0}
+function qualifies(s){const r=ranking();return s>0&&(r.length<10||s>r[r.length-1].score)}
+const validRow=x=>x&&typeof x.nome==='string'&&x.nome.length<=MAXNAME&&Number.isFinite(x.pontos)&&Number.isFinite(x.ts);
+
+function renderRank(){
+  const r=ranking();
+  let h='';
+  for(let i=0;i<10;i++){
+    const e=r[i];
+    if(e)h+=`<li class="top${i+1}${lastSaved&&e.ts===lastSaved?' me':''}"><span class="p">${i+1}º</span><span class="n">${esc(e.name)}</span><span class="s">${e.score}</span></li>`;
+    else h+=`<li class="vazio"><span class="p">${i+1}º</span><span class="n">---</span><span class="s">0</span></li>`;
+  }
+  $('list').innerHTML=h;
+  $('best').textContent=bestScore();
+  const f=$('src');
+  if(!API){f.textContent='Banco não configurado: ranking só neste navegador';f.className='foot err'}
+  else if(online){f.textContent='Ranking online ✓';f.className='foot ok'}
+  else{f.textContent='Sem conexão com o banco: ranking local';f.className='foot err'}
+}
+
+async function fetchRank(){
+  if(!API)return;
+  try{
+    const r=await fetch(API+'.json?orderBy='+encodeURIComponent('"pontos"')+'&limitToLast=10');
+    if(!r.ok)throw new Error(r.status);
+    const o=(await r.json())||{};
+    dbRows=Object.values(o).filter(validRow).map(x=>({name:x.nome,score:x.pontos,ts:x.ts}));
+    online=true;
+  }catch(e){dbRows=null;online=false}
+  renderRank();
+}
+
+async function saveScore(name,pts){
+  const e={name,score:pts,ts:Date.now()};
+  localRank.push(e);localRank=sortR(localRank).slice(0,50);saveLocal();
+  lastSaved=e.ts;lastRank=0;renderRank();
+  if(API){
+    try{
+      const r=await fetch(API+'.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:name,pontos:pts,ts:e.ts})});
+      if(!r.ok)throw new Error(r.status);
+      await fetchRank();
+    }catch(err){online=false;dbRows=null}
+  }
+  const pos=ranking().findIndex(x=>x.ts===e.ts);
+  lastRank=pos>=0?pos+1:0;
+  renderRank();
+}
+
+loadLocal();renderRank();fetchRank();
+setInterval(()=>{if(state!=='play')fetchRank()},30000);
+
+/* ---------- tamanho ---------- */
+function size(){
+  const g=$('game'),hud=document.querySelector('.hud');
+  const w=g.clientWidth-16,h=g.clientHeight-hud.offsetHeight-26;
+  S=Math.max(240,Math.floor(Math.min(w,h)/N)*N);
+  dpr=window.devicePixelRatio||1;
+  cv.width=cv.height=S*dpr;cv.style.width=cv.style.height=S+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+addEventListener('resize',size);
+
+/* ---------- jogo ---------- */
+function reset(){
+  snake=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];dir=next=D.r;
+  score=0;level=1;speed=140;place();hudUpdate();
+}
+function place(){do{food={x:Math.random()*N|0,y:Math.random()*N|0}}while(snake.some(s=>s.x===food.x&&s.y===food.y))}
+function hudUpdate(){$('score').textContent=score;$('lvl').textContent=level}
+function turn(d){if(d.x!==-dir.x||d.y!==-dir.y)next=d}
+function begin(){reset();lastSaved=null;renderRank();state='play'}
+function step(){
+  dir=next;
+  const h={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+  if(h.x<0||h.y<0||h.x>=N||h.y>=N||snake.some(s=>s.x===h.x&&s.y===h.y)){endGame();return}
+  snake.unshift(h);
+  if(h.x===food.x&&h.y===food.y){
+    score++;level=1+Math.floor(score/5);speed=Math.max(65,140-(level-1)*12);place();hudUpdate();
+  }else snake.pop();
+}
+function endGame(){
+  if(qualifies(score)){state='name';idx=Array(MAXNAME).fill(BLANK);pos=0;nameStart=performance.now()}
+  else{state='over';lastRank=0}
+}
+function confirmName(){
+  let name=idx.map(i=>CH[i]).join('').trim();
+  if(!name)name='JOGADOR';
+  state='over';
+  saveScore(name.slice(0,MAXNAME),score);
+}
+
+/* ---------- entrada ---------- */
+const held={kb:{},gp:{}},holdT={};
+const ALL=['u','d','l','r','a','b'];
+function isHeld(k){return !!(held.kb[k]||held.gp[k])}
+function onPress(k){
+  holdT[k]=performance.now();
+  if(state==='menu'||state==='over'){if(k==='a')begin();return}
+  if(state==='pause'){if(k==='b'||k==='a')state='play';return}
+  if(state==='play'){if(k==='b')state='pause';return}
+  if(state==='name'){
+    const n=CH.length;
+    if(k==='u')idx[pos]=(idx[pos]+1)%n;
+    else if(k==='d')idx[pos]=(idx[pos]+n-1)%n;
+    else if(k==='l')pos=Math.max(0,pos-1);
+    else if(k==='r')pos=Math.min(MAXNAME-1,pos+1);
+    else if(k==='a'){if(pos<MAXNAME-1)pos++;else confirmName()}
+    else if(k==='b')confirmName();
+  }
+}
+const KM={ArrowUp:'u',w:'u',W:'u',ArrowDown:'d',s:'d',S:'d',ArrowLeft:'l',a:'l',A:'l',ArrowRight:'r',d:'r',D:'r',' ':'a',Enter:'a',p:'b',P:'b',Escape:'b'};
+addEventListener('keydown',e=>{
+  if(state==='name'){
+    if(e.key.length===1&&/[a-zA-Z0-9 ]/.test(e.key)){e.preventDefault();idx[pos]=CH.indexOf(e.key.toUpperCase());pos=Math.min(MAXNAME-1,pos+1);return}
+    if(e.key==='Backspace'){e.preventDefault();idx[pos]=BLANK;pos=Math.max(0,pos-1);return}
+    if(e.key==='Enter'){e.preventDefault();confirmName();return}
+  }
+  const k=KM[e.key];if(!k)return;
+  e.preventDefault();
+  if(!held.kb[k]){held.kb[k]=true;onPress(k)}
+});
+addEventListener('keyup',e=>{const k=KM[e.key];if(k)held.kb[k]=false});
+
+function pollPad(){
+  let gp=null;
+  try{gp=[...navigator.getGamepads()].find(g=>g)}catch(e){gp=null} // alguns ambientes (ex.: prévia do Claude) bloqueiam o gamepad
+  connected=!!gp;
+  if(!gp){held.gp={};return}
+  const g={u:gp.buttons[12]?.pressed,d:gp.buttons[13]?.pressed,l:gp.buttons[14]?.pressed,r:gp.buttons[15]?.pressed,a:gp.buttons[0]?.pressed,b:gp.buttons[1]?.pressed};
+  const h=gp.axes[9];
+  if(h!==undefined&&h<=1.01){const s=H[Math.round((h+1)*3.5)]||'';g.u=g.u||s.includes('u');g.d=g.d||s.includes('d');g.l=g.l||s.includes('l');g.r=g.r||s.includes('r')}
+  ALL.forEach(k=>{g[k]=!!g[k];if(g[k]&&!held.gp[k])onPress(k)});
+  held.gp=g;
+}
+let repT=0;
+function applyHeld(t){
+  if(state==='play'){
+    const u=isHeld('u'),d=isHeld('d'),l=isHeld('l'),r=isHeld('r');
+    if(u&&dir.y===0)turn(D.u);else if(d&&dir.y===0)turn(D.d);
+    else if(l&&dir.x===0)turn(D.l);else if(r&&dir.x===0)turn(D.r);
+  }else if(state==='name'){
+    // fundo opaco: o texto não se mistura com o tabuleiro atrás
+    ctx.fillStyle='#061a3a';ctx.fillRect(0,0,S,S);
+    txt('ENTROU NO RANKING!',S*.16,S*.08);barra(S*.19);
+    txt('Pontos: '+score,S*.29,S*.065,'#f5b800');
+    txt('Digite seu nome (até 8 caracteres)',S*.37,S*.037,'#93a6c9',600);
+    const gap=S*.02,bw=Math.min(S*.085,(S*.88-(MAXNAME-1)*gap)/MAXNAME),bh=bw*1.35;
+    const x0=S/2-(MAXNAME*bw+(MAXNAME-1)*gap)/2,y=S*.47;
+    for(let i=0;i<MAXNAME;i++){
+      const x=x0+i*(bw+gap),a=i===pos;
+      ctx.fillStyle=a?'#0b4ea2':'#0a2a5e';rr(x,y,bw,bh,S*.012);ctx.fill();
+      ctx.strokeStyle=a?'#e30613':'#17305c';ctx.lineWidth=a?3:2;rr(x,y,bw,bh,S*.012);ctx.stroke();
+      const ch=CH[idx[i]],show=ch===' '?'·':ch;
+      // cada letra fica presa dentro da própria caixa
+      ctx.save();
+      rr(x+2,y+2,bw-4,bh-4,S*.01);ctx.clip();
+      ctx.fillStyle=ch===' '?'rgba(255,255,255,.35)':'#fff';
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      let fs=Math.min(bh*.62,bw*.9);
+      ctx.font='800 '+fs+'px "Barlow Condensed",Impact,sans-serif';
+      while(ctx.measureText(show).width>bw-8&&fs>8){fs-=1;ctx.font='800 '+fs+'px "Barlow Condensed",Impact,sans-serif'}
+      ctx.fillText(show,x+bw/2,y+bh/2+fs*.04);
+      ctx.restore();
+      if(a){
+        ctx.save();ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.font=Math.max(10,S*.03)+'px sans-serif';
+        ctx.fillText('▲',x+bw/2,y-S*.03);ctx.fillText('▼',x+bw/2,y+bh+S*.03);
+        ctx.restore();
+      }
+    }
+    txt('▲▼ muda a letra · ◀▶ move',S*.82,S*.037,'#93a6c9',600);
+    txt('A avança · B conclui',S*.89,S*.042,'#7ab6ff',700);
+  }
+}
+
+/* ---------- laço ---------- */
+function loop(t){
+  requestAnimationFrame(loop); // agenda o próximo quadro antes, assim um erro não trava o jogo
+  pollPad();applyHeld(performance.now());
+  if(state==='play'&&t-last>speed){last=t;step()}
+  drawBoard(t);drawOverlay();
+}
+reset();size();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
